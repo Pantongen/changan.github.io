@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>每日一卦</title>
+<style>
+  /* 在这里添加CSS样式 */
+  body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  #result {
+    margin-top: 20px;
+  }
+</style>
+</head>
+<body>
+
+<h1>抽签</h1>
+<button id="drawButton">开始</button>
+<div id="result"></div>
+
+<script>
+  // 在这里添加JavaScript代码
+  const image_url = 'pic/';
+  let intervalId = null; // 用于存储定时器的ID
+
+  const guaTexts = {
+    '乾为天': {
+      name: '乾为天',
+      image:image_url+'乾为天.png',
+      text: '刚健旺盛，发育之功；完事顺利，谨防太强',
+      fortune: '临事刚健，自强不息。',
+      career: '施比受有福，不利买而利卖。',
+      home: '积善有余庆；女子过刚宜慎重',
+      body: '保健有恒',
+    },
+    '坤为地': {
+      name: '坤为地',
+      image:image_url+'坤为地.png',
+      text: '柔顺和静，厚载之功；静守安顺，妄动招损。',
+      fortune: '为人厚道，声名远传。',
+      career: '满载而归。',
+      home: '家庭安稳；婚嫁大吉。',
+      body: '柔软运动。',
+    },
+    '水雷屯': {
+      name: '水雷屯',
+      image:image_url+'水雷屯.png',
+      text: '万物始生，开始困难；先劳后逸，苦尽甘来。',
+      fortune: '宜守不宜进',
+      career: '创业维艰',
+      home: '修缮住宅；初婚不和',
+      body: '保存元气',
+    },
+    '山水蒙': {
+      name: '山水蒙',
+      image:image_url+'山水蒙.png',
+      text: '智慧未开，蒙昧闭塞；犹豫不决，缺乏果断。',
+      fortune: '蓄积德行，出而用世',
+      career: '矿山生意，果决则吉。',
+      home: '君子居吉；婚姻之始',
+      body: '驱去邪热，可保平安',
+    },
+    '水天需': {
+      name: '水天需',
+      image:image_url+'水天需.png',
+      text: '坎陷当前，遇阻不进；大器晚成，收成在后。',
+      fortune: '时机尚未成熟，耐心等待。',
+      career: '资本未集，无法开张。',
+      home: '平安是福。',
+      body: '调节饮食，健康有望。',
+    },
+    '天水讼': {
+      name: '天水讼',
+      image:image_url+'天水讼.png',
+      text: '天高水深，达远不亲；慎谋退守，敬畏无凶。',
+      fortune: '功名受阻，不宜树敌。',
+      career: '开始谨慎，终可获利。',
+      home: '君子必求淑女。',
+      body: '预防胜于治疗。',
+    },
+    '地水师': {
+      name: '地水师',
+      image:image_url+'地水师.png',
+      text: '忧劳动众，变化无穷；公正无私，排除万难。',
+      fortune: '包容别人，修行待时。',
+      career: '有财有库，善自珍惜。',
+      home: '旧亲联姻，可喜可贺。',
+      body: '腹胀之症，调气无忧。',
+    },
+    '水地比': {
+      name: '水地比',
+      image:image_url+'水地比.png',
+      text: '水行地上，亲比欢乐；人情亲顺，百事无忧。',
+      fortune: '众人相贺，荣显之极。',
+      career: '善人相扶，大发利市。',
+      home: '百年好合。',
+      body: '心腹水肿，宜早求治。',
+    },
+    '风天小畜': {
+      name: '风天小畜',
+      image:image_url+'风天小畜.png',
+      text: '力量寡弱，阻止前进；藏器待时，耐心推进。',
+      fortune: '平平无奇，受人牵制。',
+      career: '外表不错，内多耗损。',
+      home: '小康，须防口舌；娶得淑女。',
+      body: '风火之症；小孩吉，大人凶。',
+    },
+    '天泽履': {
+      name: '天泽履',
+      image:image_url+'天泽履.png',
+      text: '步履不安，困难危险；谦虚自重，敬慎事主。',
+      fortune: '依序升进，不可攀缘。',
+      career: '明察货品，待时而售。',
+      home: '门庭严整。',
+      body: '疏通气血。',
+    },
+    '地天泰': {
+      name: '地天泰',
+      image:image_url+'地天泰.png',
+      text: '三阳开泰，万事亨通。吉卦之象，诸事皆顺',
+      fortune: '诸事如意吉祥，前途事业均顺利。',
+      career: '交易有益，得利',
+      home: '家庭和合，有通亨之象，凡事宜检点得失，不可胡为，否则招灾不利。',
+      body: '久病不利，注意肠肺及头部之症。',
+    },
+    '天地否': {
+      name: '天地否',
+      image:image_url+'天地否.png',
+      text: '大往小来，闭塞不通；否极泰来，修德避难。',
+      fortune: '诸事不顺，不可妄动。',
+      career: '适宜买入，后可获利。',
+      home: '勤俭免祸；仳离之象。',
+      body: '气血不通，节制饮食。',
+    },
+    '天火同人': {
+      name: '天火同人',
+      image:image_url+'天火同人.png',
+      text: '人类相亲，与人和同；所求皆得，无不称心。',
+      fortune: '朋友支持，升迁顺利。',
+      career: '合资有利，可以进取。',
+      home: '合家欢喜。',
+      body: '燥热之症，另求良医。',
+    },
+    '火天大有': {
+      name: '火天大有',
+      image:image_url+'火天大有.png',
+      text: '日丽中天，遍照万物；盛大富有，持盈保泰。',
+      fortune: '亨通无比，大放异彩。',
+      career: '放手去做，财富自来。',
+      home: '积善之家，子孙保之。',
+      body: '虚火上升，小心诊治。',
+    },
+    '地山谦': {
+      name: '地山谦',
+      image:image_url+'地山谦.png',
+      text: '谦和忍让，尊人自卑；利用谦虚，万事可达。',
+      fortune: '眼前平顺，步步高升。',
+      career: '物价合理，利益保障。',
+      home: '近山之居，合家平安。',
+      body: '内郁之症，放宽心胸。',
+    },
+    '雷地豫': {
+      name: '雷地豫',
+      image:image_url+'雷地豫.png',
+      text: '雷出地上，悦服快乐；安乐之中，预防忧患。',
+      fortune: '春雷发动，诸事吉祥。',
+      career: '新货上市，必有大利。',
+      home: '祈神祭祖，可保平安。',
+      body: '祷告静心。',
+    },    
+    '泽雷随': {
+      name: '泽雷随',
+      image:image_url+'泽雷随.png',
+      text: '随顺和同，贞固自持；随从机运，不能专横。',
+      fortune: '明年运行，五年方展。',
+      career: '堆积存货，明春有利。',
+      home: '防止惊惧。',
+      body: '休养为宜；牢狱之灾。',
+    },  
+    '山风蛊': {
+      name: '山风蛊',
+      image:image_url+'山风蛊.png',
+      text: '三蛊在器，事物败坏；辛勤丁宁，转危为安。',
+      fortune: '力图振作，可改旧观。',
+      career: '不宜堆积，应即贩卖。',
+      home: '整顿家风；恐有私情；生育不顺。',
+      body: '蛊毒之症，小心咒诅。',
+    },  
+    '地泽临': {
+      name: '地泽临',
+      image:image_url+'地泽临.png',
+      text: '以上临下，相佐相互；居安思危，时时慎戒。',
+      fortune: '活水流行，好运方来。',
+      career: '经营有成，获利可期。',
+      home: '家业正旺；两姓和合。',
+      body: '疾病拖延，不致危险。',
+    },  
+    '风地观': {
+      name: '风地观',
+      image:image_url+'风地观.png',
+      text: '以下观上，周游观览；平心静气，坚守岗位。',
+      fortune: '出外游览，不易闲居。',
+      career: '贩卖洋货，须防风险。',
+      home: '供养神佛。',
+      body: '风湿之症，运动调养。',
+    },  
+    '火雷噬嗑': {
+      name: '火雷噬嗑',
+      image:image_url+'火雷噬嗑.png',
+      text: '咬碎硬骨，强硬态度；事多困阻，积极谋求。',
+      fortune: '好运初动，声名直上。',
+      career: '买卖皆成，货物畅销。',
+      home: '小心火灾；百年好合。',
+      body: '须防郁热，失物不保。',
+    },  
+    '山火贲': {
+      name: '山火贲',
+      image:image_url+'山火贲.png',
+      text: '文饰光明，外实内需；隐忧之时，量力而为。',
+      fortune: '上有阻力，不可任意。',
+      career: '经理精明，须防套牢。',
+      home: '小心火灾。',
+      body: '郁火上升，慎用寒剂',
+    },  
+    '山地剥': {
+      name: '山地剥',
+      image:image_url+'山地剥.png',
+      text: '剥削蚀烂，灾情之忧；进取难成，顺时而止。',
+      fortune: '时运不佳，安心自守。',
+      career: '出口获利，剥人之财。',
+      home: '不离己宅，寄居可买。',
+      body: '魂不附体，千万小心。',
+    },  
+    '地雷复': {
+      name: '地雷复',
+      image:image_url+'地雷复.png',
+      text: '循环往复，生机复萌；成功在望，性急即败。',
+      fortune: '好运初来，静待发动。',
+      career: '暂停售物，必可获利。',
+      home: '待春再迁；婚嫁初春可成。',
+      body: '有痰上火，冬令宜防。',
+    },  
+    '天雷无妄': {
+      name: '天雷无妄',
+      image:image_url+'天雷无妄.png',
+      text: '不欺不妄，真实至诚；顺乎自然，福禄深宏。',
+      fortune: '正当好运，诸事皆宜。',
+      career: '货到财来，自然开心。',
+      home: '屋运甚旺；门当户对。',
+      body: '保持运动，自可消化。',
+    },  
+    '山天大畜': {
+      name: '山天大畜',
+      image:image_url+'山天大畜.png',
+      text: '以阳畜阴，制止欲进；坚守正道，先凶后吉。',
+      fortune: '守静二年，方可展运。',
+      career: '暂时株守，良机必至。',
+      home: '家业日隆；婚姻大吉。',
+      body: '健康有力。',
+    },  
+    '山雷颐': {
+      name: '山雷颐',
+      image:image_url+'山雷颐.png',
+      text: '养正养育，谨言节食；观察实务，自知审慎。',
+      fortune: '生机显达，谨言慎行。',
+      career: '内外升降，未必流通。',
+      home: '小心防火；贤妇从夫。',
+      body: '上寒下热，五日乃愈。',
+    },  
+    '泽风大过': {
+      name: '泽风大过',
+      image:image_url+'泽风大过.png',
+      text: '阳多阴少，势将颠覆；本未俱弱，量力而为。',
+      fortune: '收敛自省，未可求名。',
+      career: '低价高涨，不易把握。',
+      home: '防止倾斜；老少配婚。',
+      body: '肝肾皆累，不易治好。',
+    },  
+    '坎为水': {
+      name: '坎为水',
+      image:image_url+'坎为水.png',
+      text: '艰难危险，重险重陷；事多困阻，谨慎行事。',
+      fortune: '逐步升迁，随时防患。',
+      career: '财如流水，商运亨通。',
+      home: '邻居营造；亲上加亲。',
+      body: '水泻之症，虔心祷告。',
+    },  
+    '离为火': {
+      name: '离为火',
+      image:image_url+'离为火.png',
+      text: '附丽光明，谦虚缓进；公正柔和，顺守则吉。',
+      fortune: '努力修德，前途光明。',
+      career: '与火有关，皆有所得。',
+      home: '贵人之屋；可得继室。',
+      body: '热病严重，小心大去。',
+    },  
+    '泽山咸': {
+      name: '泽山咸',
+      image:image_url+'泽山咸.png',
+      text: '两性交感，正道感应；物击则鸣，识时知机。',
+      fortune: '谦虚待人，可保功名。',
+      career: '转运贩卖，必可图利。',
+      home: '知其所止；两性合好。',
+      body: '虚弱宜补。',
+    },  
+    '雷风恒': {
+      name: '雷风恒',
+      image:image_url+'雷风恒.png',
+      text: '经常恒久，长久不变；君子以利，不易其方。',
+      fortune: '努力耕耘，不可躁进。',
+      career: '贸易之地，不可更改。',
+      home: '方向不改；百年好合。',
+      body: '气喘有痰，仍服旧方。',
+    },  
+    '天山遁': {
+      name: '天山遁',
+      image:image_url+'天山遁.png',
+      text: '逃避退隐，盛极必衰；言行严禁，待机再举。',
+      fortune: '最好退隐，君子有吉。',
+      career: '物价涨跌，相去甚远。',
+      home: '须防作祟；婚姻不宜。',
+      body: '避居吉地。',
+    },  
+    '雷天大壮': {
+      name: '雷天大壮',
+      image:image_url+'雷天大壮.png',
+      text: '光明正大，强盛壮大；容忍和气，切忌冲动。',
+      fortune: '成名不难，不可骄傲。',
+      career: '得价即售，不可过贪。',
+      home: '小心防火；相敬如宾。',
+      body: '保养脚部。',
+    },  
+    '火地晋': {
+      name: '火地晋',
+      image:image_url+'火地晋.png',
+      text: '日出地上，万物进展；赏赐隆重，百谋皆遂。',
+      fortune: '好运新来，步步高升。',
+      career: '光亮之业，最有利润。',
+      home: '阳光之屋。',
+      body: '自知之明。',
+    },  
+    '地火明夷': {
+      name: '地火明夷',
+      image:image_url+'地火明夷.png',
+      text: '日入地中，光明被伤；万事阻滞，等待时运。',
+      fortune: '明哲保身，以避灾厄。',
+      career: '明无利润，暗中分红。',
+      home: '父子分居为宜；不是明媒正娶。',
+      body: '肝大郁积，注意保养。',
+    },  
+    '风火家人': {
+      name: '风火家人',
+      image:image_url+'风火家人.png',
+      text: '人心内向，家道兴隆；严正有恒，不能移心。',
+      fortune: '旺运当头，言行小心。',
+      career: '囤积货品，后有高价。',
+      home: '小心火灾；亲上加亲。',
+      body: '痰多气喘，难以根治。',
+    },  
+    '火泽睽': {
+      name: '火泽睽',
+      image:image_url+'火泽睽.png',
+      text: '人心外向，背道而驰；难以成事，不宜大举。',
+      fortune: '上下不通，以正处之。',
+      career: '人弃我取，尚有小利。',
+      home: '迁避为宜；择而娶之。',
+      body: '上火下湿，实在难治。',
+    },  
+    '水山蹇': {
+      name: '水山蹇',
+      image:image_url+'水山蹇.png',
+      text: '踏步难行，艰辛万苦；进退维谷，容忍待时。',
+      fortune: '处于艰困，更加奋勉。',
+      career: '财不流通，难以得利。',
+      home: '防水冲损；婚姻有悔。',
+      body: '足部有疾，小心保养。',
+    },  
+    '雷水解': {
+      name: '雷水解',
+      image:image_url+'雷水解.png',
+      text: '艰难化散，排难解纷；把握时机，趁早进行。',
+      fortune: '灾难已解，声名大起。',
+      career: '天时地利，人和为贵。',
+      home: '祈祷解厄；婚姻吉祥。',
+      body: '药到病除。',
+    },  
+    '山泽损': {
+      name: '山泽损',
+      image:image_url+'山泽损.png',
+      text: '损下益上，损盈益虚；先难后易，量入为出。',
+      fortune: '心平气和，才有发展。',
+      career: '和气生财，损己利人。',
+      home: '地势宜平；夫妇得正。',
+      body: '修身养性。',
+    },  
+    '风雷益': {
+      name: '风雷益',
+      image:image_url+'风雷益.png',
+      text: '损上益下，奋发有为；进取成名，商贾获利。',
+      fortune: '得意之时，改旧换新。',
+      career: '贸易要快，才有利益。',
+      home: '小心风雷；婚姻好合。',
+      body: '肝火太盛。',
+    },  
+    '泽天夬': {
+      name: '泽天夬',
+      image:image_url+'泽天夬.png',
+      text: '排除决去，必须刚断；始吉终凶，谨慎自重。',
+      fortune: '气运过盛，散财为吉。',
+      career: '利己利人，财散人聚。',
+      home: '须防水患；婚姻不成。',
+      body: '调养气息。',
+    },  
+    '天风姤': {
+      name: '天风姤',
+      image:image_url+'天风姤.png',
+      text: '阴长阳消，鸿运中衰；诸多阻滞，谨慎以防。',
+      fortune: '正当好运，名扬四海。',
+      career: '到了远方，自可获利。',
+      home: '小心狂风；婚姻得正。',
+      body: '小心中风。',
+    },  
+    '泽地萃': {
+      name: '泽地萃',
+      image:image_url+'泽地萃.png',
+      text: '物产丰富，聚合丰盛；得贵接引，无往不利。',
+      fortune: '安不忘危，自可无忧。',
+      career: '财聚之象，有聚有散。',
+      home: '防水入屋；洁身自爱。',
+      body: '胸腹水涨，早些调理。',
+    },  
+    '地风升': {
+      name: '地风升',
+      image:image_url+'地风升.png',
+      text: '升腾上进，畅行其志；出暗向明，遂渐升进。',
+      fortune: '大地春回，日益高升。',
+      career: '储蓄积财，可成富人。',
+      home: '改造大厦；以妾作嫡。',
+      body: '肝火渐旺，早些调养。',
+    },  
+    '泽水困': {
+      name: '泽水困',
+      image:image_url+'泽水困.png',
+      text: '泽上无水，受困穷之；万物不生，修德静守。',
+      fortune: '身名皆困，不如安命。',
+      career: '财乏势危，不如归去。',
+      home: '安全第一；女寡之象。',
+      body: '肾水已亏，险在眼前。',
+    },  
+    '水风井': {
+      name: '水风井',
+      image:image_url+'水风井.png',
+      text: '静水通源，气运平静；不变所守，维持现状。',
+      fortune: '木水相生，功名有望。',
+      career: '利大于本，自然可喜。',
+      home: '修屋防水；阴阳得正。',
+      body: '肾水过胀，立即调治。',
+    },  
+    '泽火革': {
+      name: '泽火革',
+      image:image_url+'泽火革.png',
+      text: '事多变动，坚守正道；顺天应人，实施变革。',
+      fortune: '改变之时，顺时而动。',
+      career: '消耗过多，迁地贸易。',
+      home: '小心防火；改娶之象。',
+      body: '肾水干枯，肝火上升。',
+    },  
+    '火风鼎': {
+      name: '火风鼎',
+      image:image_url+'火风鼎.png',
+      text: '因败致功，因人成事；万事通达，平步青云。',
+      fortune: '功名日进，贵不可言。',
+      career: '自然得利，不劳而获。',
+      home: '小心火灾；正配内助。',
+      body: '肝火上冲，顺气以治。',
+    },  
+    '震为雷': {
+      name: '震为雷',
+      image:image_url+'震为雷.png',
+      text: '重雷发响，奋发图强；先难后易，先苦后甜。',
+      fortune: '运势正强，谨慎免咎。',
+      career: '所积财物，皆得售出。',
+      home: '保护宅基，祭祷为宜；佳偶。',
+      body: '肝火太盛，不宜劳累。',
+    },  
+    '艮为山': {
+      name: '艮为山',
+      image:image_url+'艮为山.png',
+      text: '停留阻止，无可再进；随份勿贪，不可强求。',
+      fortune: '运势平平，不宜妄进。',
+      career: '守好本业，不可贪财。',
+      home: '不宜改造；命由前定。',
+      body: '带病延年。',
+    },  
+    '风山渐': {
+      name: '风山渐',
+      image:image_url+'风山渐.png',
+      text: '循序渐进，积少成多；渐进即利，性急即败。',
+      fortune: '时来运转，可以得意。',
+      career: '逐渐得利，多行善事。',
+      home: '君子居之；贤女可妻。',
+      body: '安居调养。',
+    },  
+    '雷泽归妹': {
+      name: '雷泽归妹',
+      image:image_url+'雷泽归妹.png',
+      text: '违反常理，其道将穷；明察事理，止绝妄念。',
+      fortune: '进不以道，难以持久。',
+      career: '货价尚可，结局未必。',
+      home: '已婚不宜居母家；勿眈情欲。',
+      body: '大限将至。',
+    },  
+    '雷火丰': {
+      name: '雷火丰',
+      image:image_url+'雷火丰.png',
+      text: '盛大丰满，进财获利；谋望克遂，必有喜庆。',
+      fortune: '气势正旺，谨慎小心。',
+      career: '获利甚丰，须防诉讼。',
+      home: '宜向东南；天作之合。',
+      body: '肝火上升，静养为宜。',
+    },  
+    '火山旅': {
+      name: '火山旅',
+      image:image_url+'火山旅.png',
+      text: '旅途穷困，飘摇不定；小望可成，宏愿难求。',
+      fortune: '谨慎防灾，升用在即。',
+      career: '出外经营，不可积货。',
+      home: '小心火灾；即日成亲。',
+      body: '肝火过旺，性命交关。',
+    },  
+    '巽为风': {
+      name: '巽为风',
+      image:image_url+'巽为风.png',
+      text: '顺伏容人，谦虚行事；得贵多助，利在远处。',
+      fortune: '运势顺利，诸事皆宜。',
+      career: '随机应变，获利可期。',
+      home: '可以安居；夫唱妇随。',
+      body: '可能中风，须人扶行。',
+    },  
+    '兑为泽': {
+      name: '兑为泽',
+      image:image_url+'兑为泽.png',
+      text: '泽润万物，双重喜悦；和乐群伦，确守正道。',
+      fortune: '朋友支持，好好珍惜。',
+      career: '有人扶助，获利不难。',
+      home: '友朋同住；因友成亲。',
+      body: '熟医可治。',
+    },  
+    '风水涣': {
+      name: '风水涣',
+      image:image_url+'风水涣.png',
+      text: '离散解消，灾害涣散；乘机观变，养威蓄锐。',
+      fortune: '时来运转，水到渠成。',
+      career: '神明保佑，财源流通。',
+      home: '祈神得福；自成佳偶。',
+      body: '病情严重，恐难回天。',
+    },  
+    '水泽节': {
+      name: '水泽节',
+      image:image_url+'水泽节.png',
+      text: '操守节度，适可而止；审时度势，能知变通。',
+      fortune: '品行端正，名利自成。',
+      career: '正派经营，富裕可求。',
+      home: '富有之家；婚姻吉祥。',
+      body: '节制饮食。',
+    },  
+    '风泽中孚': {
+      name: '风泽中孚',
+      image:image_url+'风泽中孚.png',
+      text: '信而有实，诚恳诚信；知己协助，谋望克遂。',
+      fortune: '风波难免，小心诉讼。',
+      career: '谨慎行事，可免灾祸。',
+      home: '诉讼之灾；婚姻致讼。',
+      body: '有惊无险。',
+    },  
+    '雷山小过': {
+      name: '雷山小过',
+      image:image_url+'雷山小过.png',
+      text: '阴顺阳困，柔软用事；谨慎自持，不宜急进。',
+      fortune: '清高自处，反遭人忌。',
+      career: '价格不合，无利可图。',
+      home: '高处之家；老夫少妻。',
+      body: '过寒或过热。',
+    },  
+    '水火既济': {
+      name: '水火既济',
+      image:image_url+'水火既济.png',
+      text: '不能资助，待时而动；由小而大，不可躁进。',
+      fortune: '盛极必衰，谨防后患。',
+      career: '及时出手，可得利润。',
+      home: '大厦可居；百年好合。',
+      body: '大病初愈，仍需自理。',
+    },  
+    '火水未济': {
+      name: '火水未济',
+      image:image_url+'火水未济.png',
+      text: '济助有成，坚忍自重；由大而小，确保盛运。',
+      fortune: '运势颠倒，务必谨慎。',
+      career: '诸事不顺，步步为营。',
+      home: '改变方向；门户不合。',
+      body: '血脉不顺，用药谨慎。',
+    },  
+  };
+
+  function showGua() {
+    const guaNames = Object.keys(guaTexts);
+    const index = Math.floor(Math.random() * guaNames.length);
+    const selectedGua = guaTexts[guaNames[index]];
+
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `
+      <h2>${selectedGua.name}</h2>
+      <img src="${selectedGua.image}" alt="${selectedGua.name}" style="max-width: 400px; height: auto;">
+      <p><strong>邵雍解：</strong>${selectedGua.text}</p>
+      <p><strong>时运：</strong>${selectedGua.fortune}</p>
+      <p><strong>财运：</strong>${selectedGua.career}</p>
+      <p><strong>家宅：</strong>${selectedGua.home}</p>
+      <p><strong>身体：</strong>${selectedGua.body}</p>
+    `;
+  }
+
+  function startDrawing() {
+    if (intervalId === null) {
+      intervalId = setInterval(showGua, 10); // 每100毫秒切换一次卦
+      document.getElementById('drawButton').textContent = '暂停';
+    } else {
+      clearInterval(intervalId); // 停止定时器
+      intervalId = null;
+      document.getElementById('drawButton').textContent = '开始';
+    }
+  }
+
+  document.getElementById('drawButton').addEventListener('click', startDrawing);
+</script>
+
+</body>
+</html>
