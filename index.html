@@ -625,7 +625,7 @@
 
   function startDrawing() {
     if (intervalId === null) {
-      intervalId = setInterval(showGua, 100); // 每100毫秒切换一次卦
+      intervalId = setInterval(showGua, 10); // 每100毫秒切换一次卦
       document.getElementById('drawButton').textContent = '暂停';
     } else {
       clearInterval(intervalId); // 停止定时器
